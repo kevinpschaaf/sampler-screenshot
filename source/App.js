@@ -32,8 +32,31 @@ enyo.kind({
 					]}
 				]}
 			]}
-		]}
+		]},
+		{kind:"onyx.Popup", centered:true, name:"screenshotPopup", showing:false, components: [
+			{name:"screenshot"}
+		]},
+		{kind:"Signals", onkeypress:"handleKeyPress"}
 	],
+	handleKeyPress: function(inSender, inEvent) {
+		var key = String.fromCharCode(inEvent.charCode);
+		this.$.screenshot.hasNode().innerHTML = "";
+		this.$.screenshotPopup.setShowing(false);
+		if (key == "s" || key == "d") {
+			html2canvas( [ document.body ], {
+				proxy: null,
+				onrendered: enyo.bind(this, function( canvas ) {
+					if (key == "d") {
+						var res = Filters.filterImage(Filters.distortSine, canvas, -0.5, -0.5);
+						canvas = Filters.toCanvas(res);
+					}
+					this.$.screenshot.hasNode().appendChild(canvas);
+					this.$.screenshotPopup.setShowing(true);
+					enyo.dom.transformValue(this.$.screenshotPopup, "scale", "0.5,0.5");
+				})
+			});
+		}
+	},
 	create: function() {
 		this.inherited(arguments);
 		this.parseQueryString();
