@@ -4,7 +4,9 @@ enyo.kind({
 	samples:[],
 	handlers: {
 		onresize:"resized",
-		onHideSampleSource:"hideSource"
+		onHideSampleSource:"hideSource",
+		onCapture:"handleCapture",
+		onDistort:"handleDistort"
 	},
 	browserScopeTestKey: "agt1YS1wcm9maWxlcnINCxIEVGVzdBjU2-gRDA",
 	components: [
@@ -40,22 +42,31 @@ enyo.kind({
 	],
 	handleKeyPress: function(inSender, inEvent) {
 		var key = String.fromCharCode(inEvent.charCode);
+		if (key == "s" || key == "d") {
+			this.capture(key == "d");
+		}
+	},
+	handleCapture: function() {
+		this.capture(false);
+	},
+	handleDistort: function() {
+		this.capture(true);
+	},
+	capture: function(distort) {
 		this.$.screenshot.hasNode().innerHTML = "";
 		this.$.screenshotPopup.setShowing(false);
-		if (key == "s" || key == "d") {
-			html2canvas( [ document.body ], {
-				proxy: null,
-				onrendered: enyo.bind(this, function( canvas ) {
-					if (key == "d") {
-						var res = Filters.filterImage(Filters.distortSine, canvas, -0.5, -0.5);
-						canvas = Filters.toCanvas(res);
-					}
-					this.$.screenshot.hasNode().appendChild(canvas);
-					this.$.screenshotPopup.setShowing(true);
-					enyo.dom.transformValue(this.$.screenshotPopup, "scale", "0.5,0.5");
-				})
-			});
-		}
+		html2canvas( [ document.body ], {
+			proxy: null,
+			onrendered: enyo.bind(this, function( canvas ) {
+				if (distort) {
+					var res = Filters.filterImage(Filters.distortSine, canvas, -0.5, -0.5);
+					canvas = Filters.toCanvas(res);
+				}
+				this.$.screenshot.hasNode().appendChild(canvas);
+				this.$.screenshotPopup.setShowing(true);
+				enyo.dom.transformValue(this.$.screenshotPopup, "scale", "0.5,0.5");
+			})
+		});
 	},
 	create: function() {
 		this.inherited(arguments);
@@ -569,7 +580,9 @@ enyo.kind({
 	events: {
 		onNavTap:"",
 		onNavBack:"",
-		onMenuAction:""
+		onMenuAction:"",
+		onCapture:"",
+		onDistort:""
 	},
 	components: [
 		{kind: "onyx.Toolbar", style:"background-color:#555;"},
@@ -579,6 +592,8 @@ enyo.kind({
 		{kind: "onyx.Toolbar", layoutKind:"FittableColumnsLayout", classes:"footer-toolbar", components: [
 			{kind: "onyx.Button", name:"back", content:"Back", ontap:"doNavBack"},
 			{fit:true},
+			{kind: "onyx.Button", content:"S", ontap:"doCapture"},
+			{kind: "onyx.Button", content:"D", ontap:"doDistort"},
 			{kind: "onyx.MenuDecorator", name:"extrasMenu", showing:false, components: [
 				{kind: "onyx.Button", content:"Extras"},
 				{kind: "onyx.Menu", onSelect: "menuAction", floating:true, components: [
